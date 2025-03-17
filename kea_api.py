@@ -65,7 +65,7 @@ def update_subnet_lifetime(subnet_id, new_lifetime):
         # Step 2: Find and update the subnet in the configuration
         dhcp4_config = config_data[0]["arguments"]["Dhcp4"]
 
-        debug_print("[DEBUG] Checking for subnet ID:", subnet_id)
+        debug_print(f"[DEBUG] Checking for subnet ID: {subnet_id}")
         #if "subnet4" in dhcp4_config:
         #    for subnet in dhcp4_config["subnet4"]:
         #        print(f"[DEBUG] Available subnet: ID={subnet['id']}, Subnet={subnet['subnet']}")
