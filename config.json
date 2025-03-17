@@ -1,0 +1,45 @@
+{
+    "_comments": {
+        "WINDOW_SIZES": "Defines the default position (x, y) and size (width, height) of each window. The values control where the window appears on the screen and how large it is.",
+        "main_window": {
+            "x": "The horizontal position of the window, measured from the left edge of the screen in pixels.",
+            "y": "The vertical position of the window, measured from the top edge of the screen in pixels.",
+            "width": "The width of the window in pixels.",
+            "height": "The height of the window in pixels."
+        },
+        "leases_dialog": {
+            "x": "The horizontal position of the 'Active Leases' window on the screen.",
+            "y": "The vertical position of the 'Active Leases' window on the screen.",
+            "width": "The width of the 'Active Leases' window.",
+            "height": "The height of the 'Active Leases' window."
+        },
+        "SPLITTER_SIZES": "Controls the default sizes of the adjustable panels within windows.",
+        "main_window_splitter": "Defines the relative sizes of the panels inside the main application window. Example: [400, 700] means the first panel is 400 pixels wide, and the second panel is 700 pixels wide.",
+
+        "MY_OPINION": "Adjust the main window size to fit your screen resolution. For example, if you have a high-resolution monitor, you might want to increase the width and height values to make better use of the available space. You can also tweak the splitter size to give more space to the left side so it expands and remains readable."
+    },
+
+
+    "WINDOW_SIZES": {
+        "use_screen_resolution": true,
+        "comment": "If use_screen_resolution is true, the below values will be ignored.",
+        "main_window": { "x": 100, "y": 100, "width": 1500, "height": 800 },
+        "leases_dialog": { "x": 200, "y": 150, "width": 100, "height": 800 }
+    },
+
+    "SPLITTER_SIZES": {
+        "main_window": [350, 900]
+    },
+
+    "server_address": "http://dhcpservername.dns",
+    "server_port": 8000,
+
+    "mysql": {
+        "host": "192.168.0.2",
+        "user": "kea",
+        "password": "yourpassword",
+        "database": "kea"
+    },
+
+    "debug": "YES"
+}
