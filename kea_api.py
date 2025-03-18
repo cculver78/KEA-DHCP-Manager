@@ -1,5 +1,6 @@
 import requests  # type: ignore
-import mysql.connector  # type: ignore
+#import mysql.connector  # type: ignore
+import pymysql
 from notification_window import NotificationWindow
 from config_loader import KEA_SERVER, MYSQL_CONFIG, debug_print
 
@@ -236,13 +237,14 @@ def get_active_leases():
 
 def get_reservations_from_db():
     try:
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=MYSQL_CONFIG.get("host", "127.0.0.1"),
             user=MYSQL_CONFIG.get("user", "kea"),
             password=MYSQL_CONFIG.get("password", ""),
-            database=MYSQL_CONFIG.get("database", "kea")
+            database=MYSQL_CONFIG.get("database", "kea"),
+            cursorclass=pymysql.cursors.DictCursor
         )
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         query = "SELECT dhcp_identifier, dhcp_identifier_type, INET_NTOA(ipv4_address) as ip_address FROM hosts"
         cursor.execute(query)
@@ -258,7 +260,8 @@ def get_reservations_from_db():
         conn.close()
         return formatted_reservations
 
-    except mysql.connector.Error as e:
+    except pymysql.connect.Error as e:
+        debug_print(f"Error fetching leases from DB:\n{str(e)}")
         NotificationWindow(f"Error fetching leases from DB:\n{str(e)}", "Error").exec()
         return []
     
@@ -280,11 +283,12 @@ def add_reservation_to_db(ip_address, mac_address, hostname, subnet_id, parent=N
             NotificationWindow(error_msg, "Error", parent).exec()
             return False
 
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=MYSQL_CONFIG.get("host", "127.0.0.1"),
             user=MYSQL_CONFIG.get("user", "kea"),
             password=MYSQL_CONFIG.get("password", ""),
-            database=MYSQL_CONFIG.get("database", "kea")
+            database=MYSQL_CONFIG.get("database", "kea"),
+            cursorclass=pymysql.cursors.DictCursor
         )
         cursor = conn.cursor()
 
@@ -320,11 +324,12 @@ def delete_reservation_from_db(ip_address, parent=None):
     Deletes a reservation from the Kea database.
     """
     try:
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=MYSQL_CONFIG.get("host", "127.0.0.1"),
             user=MYSQL_CONFIG.get("user", "kea"),
             password=MYSQL_CONFIG.get("password", ""),
-            database=MYSQL_CONFIG.get("database", "kea")
+            database=MYSQL_CONFIG.get("database", "kea"),
+            cursorclass=pymysql.cursors.DictCursor
         )
         cursor = conn.cursor()
 
@@ -355,11 +360,12 @@ def update_hostname(ip_address, hostname):
     Updates the hostname for a reservation in the Kea database.
     """
     try:
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=MYSQL_CONFIG.get("host", "127.0.0.1"),
             user=MYSQL_CONFIG.get("user", "kea"),
             password=MYSQL_CONFIG.get("password", ""),
-            database=MYSQL_CONFIG.get("database", "kea")
+            database=MYSQL_CONFIG.get("database", "kea"),
+            cursorclass=pymysql.cursors.DictCursor
         )
         cursor = conn.cursor()
 
@@ -393,11 +399,12 @@ def update_mac_address(ip_address, mac_address, parent=None):
             NotificationWindow(f"Error: Invalid MAC address format for {ip_address} -> {mac_address}", "Error", parent).exec()
             return False
 
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=MYSQL_CONFIG.get("host", "127.0.0.1"),
             user=MYSQL_CONFIG.get("user", "kea"),
             password=MYSQL_CONFIG.get("password", ""),
-            database=MYSQL_CONFIG.get("database", "kea")
+            database=MYSQL_CONFIG.get("database", "kea"),
+            cursorclass=pymysql.cursors.DictCursor
         )
         cursor = conn.cursor()
 

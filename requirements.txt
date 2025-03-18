@@ -1,3 +1,4 @@
 PyQt6
 requests
-mysql-connector-python
+pymysql
+
