@@ -34,14 +34,27 @@ Edit `config.json` to set up your Kea server and MySQL connection:
 
 ```json
 {
-    "server_address": "http://your-kea-server",
+    "WINDOW_SIZES": {
+        "use_screen_resolution": true,
+        "comment": "If use_screen_resolution is true, the below values will be ignored.",
+        "main_window": { "x": 100, "y": 100, "width": 1500, "height": 800 },
+        "leases_dialog": { "x": 200, "y": 150, "width": 100, "height": 800 }
+    },
+
+    "SPLITTER_SIZES": {
+        "main_window": [350, 900]
+    },
+
+    "server_address": "http://dhcpservername.yourdomain",
     "server_port": 8000,
+
     "mysql": {
         "host": "192.168.0.2",
         "user": "kea",
         "password": "yourpassword",
         "database": "kea"
     },
+
     "debug": "YES"
 }
 ```
