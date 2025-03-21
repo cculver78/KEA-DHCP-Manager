@@ -1,6 +1,5 @@
 import requests  # type: ignore
-#import mysql.connector  # type: ignore
-import pymysql
+import pymysql  # type: ignore
 from notification_window import NotificationWindow
 from config_loader import KEA_SERVER, MYSQL_CONFIG, debug_print
 
@@ -20,7 +19,7 @@ def get_subnets():
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
-        
+        debug_print(f"Response: {data}")
         if not data or "arguments" not in data[0] or "Dhcp4" not in data[0]["arguments"]:
             raise ValueError("Invalid response from Kea API")
         
