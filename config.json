@@ -43,5 +43,6 @@
         "database": "kea"
     },
 
-    "debug": "YES"
+    "debug": "YES",
+    "dummy_data": false
 }
