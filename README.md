@@ -13,14 +13,20 @@ KEA DHCP Manager is a PyQt6-based GUI for managing [ISC Kea DHCP](https://kea.is
 - Fetch leases and reservations from MySQL
 - Interact with Kea API for subnet and lease modifications
 - Dynamically adjust UI based on screen resolution
+- **NEW: "Status" Window**
+  - Check if the Kea DHCP service is running
+  - View % free and number of available addresses per scope
+  - Color-coded health display (green/yellow/red)
+  - If Kea is offline, you can start services via SSH (requires root credentials)
 
 ## Installation
 
 ### Prerequisites
 
 - Python 3.8+
-- Kea DHCP Server with API enabled
-- MySQL database storing DHCP reservations
+- Kea DHCP Server with the control API enabled
+- MySQL (or MariaDB) database storing DHCP reservations
+- SSH access to the Kea server (with `sudo` permissions)
 
 ### Install Dependencies
 
@@ -45,19 +51,22 @@ Edit `config.json` to set up your Kea server and MySQL connection:
         "main_window": [350, 900]
     },
 
-    "server_address": "http://dhcpservername.yourdomain",
-    "server_port": 8000,
+      "server_address": "server.domain.lan",
+      "server_port": 8000,
+      "ssh_user": "root",
+      "ssh_password": "yourRootPassword",
 
     "mysql": {
         "host": "192.168.0.2",
         "user": "kea",
-        "password": "yourpassword",
+        "password": "yourPassword",
         "database": "kea"
     },
 
     "debug": "YES"
 }
 ```
+⚠️ Passwords are stored in plaintext for now. Secure storage is planned in a future release.
 
 ## Usage
 
