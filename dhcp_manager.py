@@ -1,12 +1,17 @@
 from PyQt6.QtWidgets import ( # type: ignore
-    QMainWindow, QVBoxLayout, QWidget,
-    QTreeWidget, QTreeWidgetItem, QSplitter, QMenu, QInputDialog
+    QMainWindow, QVBoxLayout, QWidget, QPushButton,
+    QTreeWidget, QTreeWidgetItem, QSplitter, QMenu, QInputDialog, QHBoxLayout
 )
 from PyQt6.QtGui import QAction # type: ignore
 from PyQt6.QtCore import Qt # type: ignore
 from show_leases_dialog import ShowLeasesDialog  # New leases window
 from add_reservation_dialog import AddReservationDialog  # New reservation dialog
 from config_loader import WINDOW_SIZES, SPLITTER_SIZES, debug_print
+from status_dialog import StatusDialog
+from config_loader import CONFIG
+import paramiko
+import time
+import subprocess
 import sys
 import kea_api
 
@@ -46,39 +51,109 @@ class TreeViewDialog(QWidget):
 
         self.setWindowTitle("DHCP Manager - Tree View")
 
-        # Splitter: Left = Tree View, Right = Leases Table
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
 
-        # Left Panel: Tree Widget
         self.tree_widget = QTreeWidget()
         self.tree_widget.setHeaderLabels(["DHCP Scopes"])
         self.tree_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.tree_widget.itemClicked.connect(self.handle_tree_click)  # Detect clicks
+        self.tree_widget.itemClicked.connect(self.handle_tree_click)
         self.splitter.addWidget(self.tree_widget)
-        # Connect custom context menu
         self.tree_widget.customContextMenuRequested.connect(self.create_context_menu)
 
-        # Right Panel: Lease Table (Embedded)
         self.leases_dialog = ShowLeasesDialog(self)
-        self.leases_dialog.setWindowFlags(Qt.WindowType.Widget)  # Make it an embedded widget
+        self.leases_dialog.setWindowFlags(Qt.WindowType.Widget)
         self.splitter.addWidget(self.leases_dialog)
 
-        # Set initial splitter sizes
         splitter_sizes = SPLITTER_SIZES.get("main_window", [400, 700])
-
-        # Apply splitter sizes
         self.splitter.setSizes(splitter_sizes)
 
-
-        # Main Layout
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(self.splitter)
 
-        # Ensure `load_subnets()` runs AFTER layout is set up
-        self.show()  # Ensure widget is visible
-        debug_print("DEBUG: Calling load_subnets()...")
-        self.load_subnets()  # Load subnets immediately
+        # Add button row below splitter
+        self.button_layout = QHBoxLayout()
+        self.reset_filters_button = QPushButton("Reset Filters")
+        self.refresh_button = QPushButton("Refresh View")
+        self.quit_button = QPushButton("Quit")
+        self.status_button = QPushButton("Status")
 
+        self.reset_filters_button.clicked.connect(self.leases_dialog.reset_filters)
+        self.refresh_button.clicked.connect(self.leases_dialog.refresh_leases)
+        self.quit_button.clicked.connect(self.quit_app)
+        self.status_button.clicked.connect(self.handle_status_button)
+
+        self.button_layout.addWidget(self.reset_filters_button)
+        self.button_layout.addWidget(self.refresh_button)
+        self.button_layout.addWidget(self.status_button)
+        self.button_layout.addWidget(self.quit_button)
+        main_layout.addLayout(self.button_layout)
+
+        self.show()
+        debug_print("DEBUG: Calling load_subnets()...")
+        subnets = kea_api.get_subnets()
+        if not subnets:
+            debug_print("[DEBUG] No subnets returned — assuming server is offline.")
+            self.status_button.setText("Start Services")
+        else:
+            self.load_subnets()
+
+    def handle_status_button(self):
+        if self.status_button.text() == "Start Services":
+            self.start_services()
+            self.status_button.setText("Status")
+        else:
+            self.show_status_dialog()
+
+    def start_services(self):
+        server = CONFIG.get("server_address", "127.0.0.1")
+        username = CONFIG.get("ssh_user", "")
+        password = CONFIG.get("ssh_password", "")
+
+        try:
+            debug_print(f"[DEBUG] Connecting to {server} via SSH as root...")
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(server, username=username, password=password)
+
+            commands = [
+                f"echo '{password}' | sudo -S systemctl start mariadb",
+                f"echo '{password}' | sudo -S systemctl start isc-kea-dhcp4-server"
+            ]
+
+            for cmd in commands:
+                stdin, stdout, stderr = client.exec_command(cmd)
+                output = stdout.read().decode()
+                error = stderr.read().decode()
+                if error:
+                    debug_print(f"[ERROR] {error.strip()}")
+                else:
+                    debug_print(f"[OUTPUT] {output.strip()}")
+
+            client.close()
+            debug_print("[DEBUG] SSH commands completed. Waiting for Kea to become responsive...")
+
+            # Retry up to 5 seconds for Kea to respond
+            for attempt in range(10):
+                subnets = kea_api.get_subnets()
+                if subnets:
+                    debug_print("[DEBUG] Kea API is responsive.")
+                    self.status_button.setText("Status")
+                    self.load_subnets()
+                    self.leases_dialog.refresh_leases()
+                    return
+                else:
+                    debug_print(f"[DEBUG] Kea not ready yet (attempt {attempt+1}/10)...")
+                    time.sleep(0.5)
+
+            debug_print("[ERROR] Kea API still not responding after retries.")
+            self.status_button.setText("Start Services")
+
+        except Exception as e:
+            debug_print(f"[ERROR] SSH connection or command failed: {e}")
+
+    def show_status_dialog(self):
+        status_dialog = StatusDialog(self)
+        status_dialog.exec()
     
     def force_close(self):
         """Ensures both the tree view and the leases dialog close together."""

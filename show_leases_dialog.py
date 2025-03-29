@@ -49,23 +49,23 @@ class ShowLeasesDialog(QDialog):
         self.layout.addWidget(self.table)
 
         # Create the buttons first before adding them to the layout
-        self.reset_filters_button = QPushButton("Reset Filters")
-        self.reset_filters_button.clicked.connect(self.reset_filters)
+        #self.reset_filters_button = QPushButton("Reset Filters")
+        #self.reset_filters_button.clicked.connect(self.reset_filters)
 
-        self.refresh_button = QPushButton("Refresh View")
-        self.refresh_button.clicked.connect(self.refresh_leases)
+        #self.refresh_button = QPushButton("Refresh View")
+        #self.refresh_button.clicked.connect(self.refresh_leases)
 
-        self.quit_button = QPushButton("Quit")
-        self.quit_button.clicked.connect(self.quit_app)
+        #self.quit_button = QPushButton("Quit")
+        #self.quit_button.clicked.connect(self.quit_app)            MOVED THESE BUTTONS TO THE MAIN PORTION OF THE WINDOW
 
         # Create a horizontal layout for buttons
-        self.button_layout = QHBoxLayout()
-        self.button_layout.addWidget(self.reset_filters_button)
-        self.button_layout.addWidget(self.refresh_button)
-        self.button_layout.addWidget(self.quit_button)
+        #self.button_layout = QHBoxLayout()
+        #self.button_layout.addWidget(self.reset_filters_button)
+        #self.button_layout.addWidget(self.refresh_button)
+        #self.button_layout.addWidget(self.quit_button)
 
         # Add the button layout at the bottom
-        self.layout.addLayout(self.button_layout)
+        #self.layout.addLayout(self.button_layout)
 
         # Load data initially
         self.load_leases()

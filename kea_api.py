@@ -312,7 +312,7 @@ def add_reservation_to_db(ip_address, mac_address, hostname, subnet_id, parent=N
         NotificationWindow(error_msg, "Warning", parent).exec()
         return False
 
-    except mysql.connector.Error as e:
+    except pymysql.connector.Error as e:
         error_msg = f"[DEBUG] ERROR: MySQL Exception: {e}"
         NotificationWindow(error_msg, "Database Error", parent).exec()
         return False
@@ -348,7 +348,7 @@ def delete_reservation_from_db(ip_address, parent=None):
             NotificationWindow(f"No reservation found for {ip_address}.", "Warning", parent).exec()
             return False
 
-    except mysql.connector.Error as e:
+    except pymysql.connector.Error as e:
         NotificationWindow(f"Error deleting reservation from DB: {e}", "Database Error", parent).exec()
         return False
 
@@ -376,7 +376,7 @@ def update_hostname(ip_address, hostname):
         conn.close()
         return True
 
-    except mysql.connector.Error as e:
+    except pymysql.connector.Error as e:
         NotificationWindow(f"Error updating hostname in DB:\n{str(e)}", "Error").exec()
         return False
 
@@ -424,6 +424,6 @@ def update_mac_address(ip_address, mac_address, parent=None):
             NotificationWindow(f"No rows updated. Possible issue with IP {ip_address}", "Warning", parent).exec()
             return False
 
-    except mysql.connector.Error as e:
+    except pymysql.connector.Error as e:
         NotificationWindow(f"Error updating MAC address in DB: {e}", "Database Error", parent).exec()
         return False

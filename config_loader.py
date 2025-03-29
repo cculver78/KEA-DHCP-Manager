@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from pathlib import Path
 from PyQt6.QtGui import QGuiApplication # type: ignore
 
@@ -7,13 +8,20 @@ from PyQt6.QtGui import QGuiApplication # type: ignore
 CONFIG_FILE = "config.json"
 CONFIG = {}
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
 def load_config():
-    global CONFIG
-    if not os.path.exists(CONFIG_FILE):
-        raise FileNotFoundError(f"Configuration file '{CONFIG_FILE}' not found.")
-    
-    with open(CONFIG_FILE, "r") as file:
-        CONFIG = json.load(file)
+    global CONFIG  # Declare the global variable CONFIG
+    config_path = resource_path('config.json')  # Use the resource_path function to locate the config file
+
+    if not os.path.exists(config_path):  # Check for the existence of the correct path
+        raise FileNotFoundError(f"Configuration file '{config_path}' not found.")
+
+    with open(config_path, "r") as file:
+        CONFIG = json.load(file)  # Load the configuration into the CONFIG global variable
 
 # Load config once at startup
 load_config()
@@ -21,7 +29,7 @@ load_config()
 # Define global variables
 DEBUG = CONFIG.get("debug", "NO").strip().upper() == "YES"
 MYSQL_CONFIG = CONFIG.get("mysql", {})
-KEA_SERVER = f"{CONFIG['server_address']}:{CONFIG['server_port']}"
+KEA_SERVER = f"http://{CONFIG['server_address']}:{CONFIG['server_port']}"
 WINDOW_SIZES = CONFIG.get("WINDOW_SIZES", {})
 SPLITTER_SIZES = CONFIG.get("SPLITTER_SIZES", {})
 

@@ -31,13 +31,15 @@
         "main_window": [350, 900]
     },
 
-    "server_address": "http://dhcpservername.dns",
-    "server_port": 8000,
+      "server_address": "server.domain.lan",
+      "server_port": 8000,
+      "ssh_user": "root",
+      "ssh_password": "rootpwhere",
 
     "mysql": {
         "host": "192.168.0.2",
         "user": "kea",
-        "password": "yourpassword",
+        "password": "sqlpwhere",
         "database": "kea"
     },
 
