@@ -1,13 +1,30 @@
 import requests  # type: ignore
 import pymysql  # type: ignore
 from notification_window import NotificationWindow
-from config_loader import KEA_SERVER, MYSQL_CONFIG, debug_print
+from config_loader import KEA_SERVER, MYSQL_CONFIG, DUMMY_DATA, debug_print
+import time
 
 
 def get_subnets():
     """
     Fetches the list of subnets from the Kea API.
     """
+    if DUMMY_DATA:
+        return [
+            {
+                "subnet_id": 1,
+                "subnet": "10.1.1.0/24",
+                "valid_lifetime": 3600,
+                "pools": ["10.1.1.20-10.1.1.240"]
+            },
+            {
+                "subnet_id": 2,
+                "subnet": "10.2.2.0/24",
+                "valid_lifetime": 7200,
+                "pools": ["10.2.2.50-10.2.2.200"]
+            }
+        ]
+    
     url = f"{KEA_SERVER}/"
     headers = {"Content-Type": "application/json"}
     payload = {
@@ -43,6 +60,11 @@ def update_subnet_lifetime(subnet_id, new_lifetime):
     Updates the lease time for a given subnet and adjusts renew-timer and rebind-timer accordingly.
     Only writes to config if config-set is successful.
     """
+    if DUMMY_DATA:
+        debug_print(f"[DUMMY] Skipping update_subnet_lifetime for subnet {subnet_id} with lifetime {new_lifetime}")
+        NotificationWindow(f"[DUMMY MODE] Lease time change skipped for subnet {subnet_id}.", "Info").exec()
+        return
+
     url = f"{KEA_SERVER}/"
     headers = {"Content-Type": "application/json"}
 
@@ -66,11 +88,6 @@ def update_subnet_lifetime(subnet_id, new_lifetime):
         dhcp4_config = config_data[0]["arguments"]["Dhcp4"]
 
         debug_print(f"[DEBUG] Checking for subnet ID: {subnet_id}")
-        #if "subnet4" in dhcp4_config:
-        #    for subnet in dhcp4_config["subnet4"]:
-        #        print(f"[DEBUG] Available subnet: ID={subnet['id']}, Subnet={subnet['subnet']}")
-        #else:
-        #    print("[DEBUG] No subnets found in DHCP4 configuration")
 
         found = False
         for subnet in dhcp4_config.get("subnet4", []):
@@ -139,6 +156,11 @@ def update_subnet_pool(subnet_id, new_pool_range):
     """
     Workaround to update pool range: Get current config, modify pools, and reapply config.
     """
+    if DUMMY_DATA:
+        debug_print(f"[DUMMY] Skipping update_subnet_pool for subnet {subnet_id} with pool {new_pool_range}")
+        NotificationWindow(f"[DUMMY MODE] Pool update skipped for subnet {subnet_id}.", "Info").exec()
+        return
+    
     url = f"{KEA_SERVER}/"
     headers = {"Content-Type": "application/json"}
 
@@ -210,6 +232,27 @@ def update_subnet_pool(subnet_id, new_pool_range):
 
 
 def get_active_leases():
+    if DUMMY_DATA:
+        now = int(time.time())
+        return [
+            {
+                "ip-address": "10.1.1.25",
+                "hw-address": "AA:BB:CC:DD:EE:01",
+                "hostname": "mock-client-1",
+                "subnet-id": 1,
+                "cltt": now - 100,
+                "valid-lft": 1800
+            },
+            {
+                "ip-address": "10.2.2.66",
+                "hw-address": "AA:BB:CC:DD:EE:02",
+                "hostname": "mock-client-2",
+                "subnet-id": 2,
+                "cltt": now - 300,
+                "valid-lft": 3600
+            }
+        ]
+    
     url = f"{KEA_SERVER}/"
     headers = {"Content-Type": "application/json"}
 
@@ -217,7 +260,7 @@ def get_active_leases():
         "command": "lease4-get-all",
         "service": ["dhcp4"]
     }
-
+    
     try:
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()  # Raise an error for HTTP failures
@@ -235,6 +278,22 @@ def get_active_leases():
         return []
 
 def get_reservations_from_db():
+    if DUMMY_DATA:
+        return [
+            {
+                "ip-address": "10.1.1.30",
+                "dhcp_identifier": "AABBCCDDEE30",
+                "hostname": "reserved-30",
+                "subnet_id": 1
+            },
+            {
+                "ip-address": "10.2.2.88",
+                "dhcp_identifier": "AABBCCDDEE88",
+                "hostname": "reserved-88",
+                "subnet_id": 2
+            }
+        ]
+    
     try:
         conn = pymysql.connect(
             host=MYSQL_CONFIG.get("host", "127.0.0.1"),
@@ -268,6 +327,11 @@ def add_reservation_to_db(ip_address, mac_address, hostname, subnet_id, parent=N
     """
     Inserts a reservation into the Kea MySQL database.
     """
+    if DUMMY_DATA:
+        debug_print(f"[DUMMY] Skipping real DB insert for reservation {ip_address} → {mac_address}")
+        NotificationWindow(f"[DUMMY MODE] Reservation added for {ip_address} (not really).", "Success", parent).exec()
+        return True
+    
     try:
         if not mac_address or mac_address.strip() == "":
             error_msg = f"[DEBUG] ERROR: MAC address is empty for {ip_address}"
@@ -322,6 +386,11 @@ def delete_reservation_from_db(ip_address, parent=None):
     """
     Deletes a reservation from the Kea database.
     """
+    if DUMMY_DATA:
+        debug_print(f"[DUMMY] Skipping real DB delete for {ip_address}")
+        NotificationWindow(f"[DUMMY MODE] Reservation for {ip_address} deleted (not really).", "Success", parent).exec()
+        return True
+    
     try:
         conn = pymysql.connect(
             host=MYSQL_CONFIG.get("host", "127.0.0.1"),
@@ -358,6 +427,10 @@ def update_hostname(ip_address, hostname):
     """
     Updates the hostname for a reservation in the Kea database.
     """
+    if DUMMY_DATA:
+        debug_print(f"[DUMMY] Skipping real DB hostname update for {ip_address} → {hostname}")
+        return True
+    
     try:
         conn = pymysql.connect(
             host=MYSQL_CONFIG.get("host", "127.0.0.1"),
@@ -385,6 +458,11 @@ def update_mac_address(ip_address, mac_address, parent=None):
     Updates the MAC address for a reservation in the Kea database.
     The MAC address is stored in binary format using UNHEX().
     """
+    if DUMMY_DATA:
+        debug_print(f"[DUMMY] Skipping real MAC update for {ip_address} → {mac_address}")
+        NotificationWindow(f"[DUMMY MODE] MAC address updated for {ip_address} (not really).", "Success", parent).exec()
+        return True
+    
     try:
         if not mac_address or mac_address.strip() == "":
             NotificationWindow(f"Error: MAC address is empty for {ip_address}", "Error", parent).exec()

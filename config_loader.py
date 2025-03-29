@@ -32,6 +32,7 @@ MYSQL_CONFIG = CONFIG.get("mysql", {})
 KEA_SERVER = f"http://{CONFIG['server_address']}:{CONFIG['server_port']}"
 WINDOW_SIZES = CONFIG.get("WINDOW_SIZES", {})
 SPLITTER_SIZES = CONFIG.get("SPLITTER_SIZES", {})
+DUMMY_DATA = CONFIG.get("dummy_data", False)
 
 # Check if screen resolution should be used
 USE_SCREEN_RESOLUTION = WINDOW_SIZES.get("use_screen_resolution", False)

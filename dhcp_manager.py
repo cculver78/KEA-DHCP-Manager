@@ -4,12 +4,12 @@ from PyQt6.QtWidgets import ( # type: ignore
 )
 from PyQt6.QtGui import QAction # type: ignore
 from PyQt6.QtCore import Qt # type: ignore
-from show_leases_dialog import ShowLeasesDialog  # New leases window
-from add_reservation_dialog import AddReservationDialog  # New reservation dialog
+from show_leases_dialog import ShowLeasesDialog
+from add_reservation_dialog import AddReservationDialog
 from config_loader import WINDOW_SIZES, SPLITTER_SIZES, debug_print
 from status_dialog import StatusDialog
-from config_loader import CONFIG
-import paramiko
+from config_loader import CONFIG, DUMMY_DATA
+import paramiko   # type: ignore
 import time
 import subprocess
 import sys
@@ -88,16 +88,29 @@ class TreeViewDialog(QWidget):
         self.button_layout.addWidget(self.quit_button)
         main_layout.addLayout(self.button_layout)
 
+        if DUMMY_DATA:
+            self.status_button.setText("Dummy Mode")
+            self.status_button.setEnabled(False)
+
         self.show()
         debug_print("DEBUG: Calling load_subnets()...")
-        subnets = kea_api.get_subnets()
-        if not subnets:
-            debug_print("[DEBUG] No subnets returned — assuming server is offline.")
-            self.status_button.setText("Start Services")
-        else:
+        if DUMMY_DATA:
+            debug_print("[DUMMY] Dummy mode is ON — loading fake subnets.")
             self.load_subnets()
+            self.status_button.setEnabled(False)  # Disable service logic
+        else:
+            subnets = kea_api.get_subnets()
+            if not subnets:
+                debug_print("[DEBUG] No subnets returned — assuming server is offline.")
+                self.status_button.setText("Start Services")
+            else:
+                self.load_subnets()
 
     def handle_status_button(self):
+        if DUMMY_DATA:
+            debug_print("[DUMMY] Ignoring status button in dummy mode.")
+            return
+
         if self.status_button.text() == "Start Services":
             self.start_services()
             self.status_button.setText("Status")
@@ -105,6 +118,10 @@ class TreeViewDialog(QWidget):
             self.show_status_dialog()
 
     def start_services(self):
+        if DUMMY_DATA:
+            debug_print("[DUMMY] Skipping service start in dummy mode.")
+            return
+
         server = CONFIG.get("server_address", "127.0.0.1")
         username = CONFIG.get("ssh_user", "")
         password = CONFIG.get("ssh_password", "")

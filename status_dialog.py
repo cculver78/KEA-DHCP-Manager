@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel, QHeaderView  # type: ignore
 from PyQt6.QtGui import QColor  # type: ignore
 from PyQt6.QtCore import Qt  # type: ignore
+from config_loader import DUMMY_DATA
 import kea_api
 
 class StatusDialog(QDialog):
@@ -20,18 +21,21 @@ class StatusDialog(QDialog):
         self.update_status()
 
     def update_status(self):
-        # Check if Kea server is reachable
+        if DUMMY_DATA:
+            self.status_label.setText("🧪 Dummy Mode: Server simulated (always up).")
+            return
+
+        # Real check if not in dummy mode
         try:
             leases = kea_api.get_active_leases()
-            server_up = True
+            server_up = bool(leases)  # Treat empty list as "server up"
         except:
             server_up = False
 
-        if not server_up or leases is None:
+        if not server_up:
             self.status_label.setText("❌ Kea DHCP Server is not responding.")
-            return
-
-        self.status_label.setText("✅ Kea DHCP Server is running.")
+        else:
+            self.status_label.setText("✅ Kea DHCP Server is online.")
 
         subnets = kea_api.get_subnets()
         reservations = kea_api.get_reservations_from_db()
