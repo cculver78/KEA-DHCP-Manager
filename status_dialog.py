@@ -123,7 +123,7 @@ class StatusDialog(QDialog):
                 if col == 2:
                     if percent_free < 10:
                         item.setBackground(QColor("#ffcccc"))  # Red
-                    elif percent_free < 25:
+                    elif percent_free < 34:
                         item.setBackground(QColor("#fff3cd"))  # Yellow
                     else:
                         item.setBackground(QColor("#d4edda"))  # Green
