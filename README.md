@@ -18,6 +18,9 @@ KEA DHCP Manager is a PyQt6-based GUI for managing [ISC Kea DHCP](https://kea.is
   - View % free and number of available addresses per scope
   - Color-coded health display (green/yellow/red)
   - If Kea is offline, you can start services via SSH (requires root credentials)
+- **NEW: Dummy Mode**
+  - Simulate subnets, leases, and reservations with fake data
+  - Safe for testing and screenshots without connecting to real servers
 
 ## Installation
 
@@ -63,7 +66,8 @@ Edit `config.json` to set up your Kea server and MySQL connection:
         "database": "kea"
     },
 
-    "debug": "YES"
+    "debug": "YES",
+    "dummy_data": false
 }
 ```
 ⚠️ Passwords are stored in plaintext for now. Secure storage is planned in a future release.
