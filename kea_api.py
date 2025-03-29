@@ -22,6 +22,30 @@ def get_subnets():
                 "subnet": "10.2.2.0/24",
                 "valid_lifetime": 7200,
                 "pools": ["10.2.2.50-10.2.2.200"]
+            },
+            {
+                "subnet_id": 3,
+                "subnet": "10.3.3.0/24",
+                "valid_lifetime": 1800,
+                "pools": ["10.3.3.30-10.3.3.210"]
+            },
+            {
+                "subnet_id": 4,
+                "subnet": "10.4.4.0/24",
+                "valid_lifetime": 5400,
+                "pools": ["10.4.4.40-10.4.4.220"]
+            },
+            {
+                "subnet_id": 5,
+                "subnet": "10.5.5.0/24",
+                "valid_lifetime": 3600,
+                "pools": ["10.5.5.10-10.5.5.230"]
+            },
+            {
+                "subnet_id": 6,
+                "subnet": "10.6.6.0/24",
+                "valid_lifetime": 9000,
+                "pools": ["10.6.6.60-10.6.6.250"]
             }
         ]
     
@@ -238,7 +262,7 @@ def get_active_leases():
             {
                 "ip-address": "10.1.1.25",
                 "hw-address": "AA:BB:CC:DD:EE:01",
-                "hostname": "mock-client-1",
+                "hostname": "alpha",
                 "subnet-id": 1,
                 "cltt": now - 100,
                 "valid-lft": 1800
@@ -246,10 +270,42 @@ def get_active_leases():
             {
                 "ip-address": "10.2.2.66",
                 "hw-address": "AA:BB:CC:DD:EE:02",
-                "hostname": "mock-client-2",
+                "hostname": "beta",
                 "subnet-id": 2,
                 "cltt": now - 300,
                 "valid-lft": 3600
+            },
+            {
+                "ip-address": "10.3.3.77",
+                "hw-address": "AA:BB:CC:DD:EE:03",
+                "hostname": "gamma",
+                "subnet-id": 3,
+                "cltt": now - 400,
+                "valid-lft": 1200
+            },
+            {
+                "ip-address": "10.4.4.88",
+                "hw-address": "AA:BB:CC:DD:EE:04",
+                "hostname": "delta",
+                "subnet-id": 4,
+                "cltt": now - 200,
+                "valid-lft": 3600
+            },
+            {
+                "ip-address": "10.5.5.99",
+                "hw-address": "AA:BB:CC:DD:EE:05",
+                "hostname": "epsilon",
+                "subnet-id": 5,
+                "cltt": now - 500,
+                "valid-lft": 2400
+            },
+            {
+                "ip-address": "10.6.6.111",
+                "hw-address": "AA:BB:CC:DD:EE:06",
+                "hostname": "zeta",
+                "subnet-id": 6,
+                "cltt": now - 600,
+                "valid-lft": 9000
             }
         ]
     
@@ -281,16 +337,40 @@ def get_reservations_from_db():
     if DUMMY_DATA:
         return [
             {
-                "ip-address": "10.1.1.30",
-                "dhcp_identifier": "AABBCCDDEE30",
-                "hostname": "reserved-30",
+                "ip-address": "10.1.1.240",
+                "dhcp_identifier": "AABBCCDDEEF0",
+                "hostname": "reserved-alpha",
                 "subnet_id": 1
             },
             {
-                "ip-address": "10.2.2.88",
-                "dhcp_identifier": "AABBCCDDEE88",
-                "hostname": "reserved-88",
+                "ip-address": "10.2.2.200",
+                "dhcp_identifier": "AABBCCDDEEF1",
+                "hostname": "reserved-beta",
                 "subnet_id": 2
+            },
+            {
+                "ip-address": "10.3.3.210",
+                "dhcp_identifier": "AABBCCDDEEF2",
+                "hostname": "reserved-gamma",
+                "subnet_id": 3
+            },
+            {
+                "ip-address": "10.4.4.220",
+                "dhcp_identifier": "AABBCCDDEEF3",
+                "hostname": "reserved-delta",
+                "subnet_id": 4
+            },
+            {
+                "ip-address": "10.5.5.230",
+                "dhcp_identifier": "AABBCCDDEEF4",
+                "hostname": "reserved-epsilon",
+                "subnet_id": 5
+            },
+            {
+                "ip-address": "10.6.6.250",
+                "dhcp_identifier": "AABBCCDDEEF5",
+                "hostname": "reserved-zeta",
+                "subnet_id": 6
             }
         ]
     
