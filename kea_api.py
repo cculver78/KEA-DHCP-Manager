@@ -15,13 +15,13 @@ def get_subnets():
                 "subnet_id": 1,
                 "subnet": "10.1.1.0/24",
                 "valid_lifetime": 3600,
-                "pools": ["10.1.1.20-10.1.1.240"]
+                "pools": ["10.1.1.20-10.1.1.21"]
             },
             {
                 "subnet_id": 2,
                 "subnet": "10.2.2.0/24",
                 "valid_lifetime": 7200,
-                "pools": ["10.2.2.50-10.2.2.200"]
+                "pools": ["10.2.2.50-10.2.2.52"]
             },
             {
                 "subnet_id": 3,

@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel, QHeaderView  # type: ignore
 from PyQt6.QtGui import QColor  # type: ignore
 from PyQt6.QtCore import Qt  # type: ignore
-from config_loader import DUMMY_DATA
+from config_loader import DUMMY_DATA, debug_print
 import kea_api
 
 class StatusDialog(QDialog):
@@ -22,10 +22,59 @@ class StatusDialog(QDialog):
 
     def update_status(self):
         if DUMMY_DATA:
-            self.status_label.setText("🧪 Dummy Mode: Server simulated (always up).")
-            return
+            debug_print("[DUMMY] Populating fake status data...")
+            dummy_subnets = kea_api.get_subnets()
+            dummy_leases = kea_api.get_active_leases()
+            dummy_reservations = kea_api.get_reservations_from_db()
 
-        # Real check if not in dummy mode
+            self.status_label.setText("🧪 Dummy Mode: Simulated server data")
+
+            # Set headers
+            headers = ["Subnet", "Subnet ID", "% Free", "# Free", "Total", "Leases", "Reservations"]
+            self.table.setColumnCount(len(headers))
+            self.table.setHorizontalHeaderLabels(headers)
+            self.table.setRowCount(0)
+
+            for subnet in dummy_subnets:
+                subnet_id = subnet["subnet_id"]
+                cidr = subnet["subnet"]
+                pools = subnet.get("pools", [])
+
+                total = 0
+                for pool in pools:
+                    start_ip, end_ip = pool.split("-")
+                    start = int(start_ip.split(".")[-1])
+                    end = int(end_ip.split(".")[-1])
+                    total += (end - start + 1)
+
+                leases = [l for l in dummy_leases if l.get("subnet-id") == subnet_id]
+                reservations = [r for r in dummy_reservations if r.get("subnet_id") == subnet_id]
+
+                used = len(leases) + len(reservations)
+                free = total - used
+                percent_free = (free / total) * 100 if total > 0 else 0
+
+                row = self.table.rowCount()
+                self.table.insertRow(row)
+                self.table.setItem(row, 0, QTableWidgetItem(cidr))
+                self.table.setItem(row, 1, QTableWidgetItem(str(subnet_id)))
+                self.table.setItem(row, 2, QTableWidgetItem(f"{percent_free:.1f}%"))
+                self.table.setItem(row, 3, QTableWidgetItem(str(free)))
+                self.table.setItem(row, 4, QTableWidgetItem(str(total)))
+                self.table.setItem(row, 5, QTableWidgetItem(str(len(leases))))
+                self.table.setItem(row, 6, QTableWidgetItem(str(len(reservations))))
+
+                item = self.table.item(row, 2)  # Column 2 = % Free
+                if item:
+                    if percent_free < 10:
+                        item.setBackground(QColor("#ffcccc"))  # Light red
+                    elif percent_free < 34:
+                        item.setBackground(QColor("#fff3cd"))  # Light yellow
+                    else:
+                        item.setBackground(QColor("#d4edda"))  # Light green
+
+            return  # Done with dummy mode
+
         try:
             leases = kea_api.get_active_leases()
             server_up = bool(leases)  # Treat empty list as "server up"
