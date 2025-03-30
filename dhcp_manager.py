@@ -88,16 +88,12 @@ class TreeViewDialog(QWidget):
         self.button_layout.addWidget(self.quit_button)
         main_layout.addLayout(self.button_layout)
 
-        if DUMMY_DATA:
-            self.status_button.setText("Dummy Mode")
-            self.status_button.setEnabled(False)
-
         self.show()
         debug_print("DEBUG: Calling load_subnets()...")
+
         if DUMMY_DATA:
             debug_print("[DUMMY] Dummy mode is ON — loading fake subnets.")
             self.load_subnets()
-            self.status_button.setEnabled(False)  # Disable service logic
         else:
             subnets = kea_api.get_subnets()
             if not subnets:
@@ -107,10 +103,6 @@ class TreeViewDialog(QWidget):
                 self.load_subnets()
 
     def handle_status_button(self):
-        if DUMMY_DATA:
-            debug_print("[DUMMY] Ignoring status button in dummy mode.")
-            return
-
         if self.status_button.text() == "Start Services":
             self.start_services()
             self.status_button.setText("Status")
@@ -344,11 +336,18 @@ class TreeViewDialog(QWidget):
           self.leases_dialog.refresh_leases()
 
     def change_lease_time(self, item):
-        subnet_id = item.parent().data(0, Qt.ItemDataRole.UserRole)  # Get the parent subnet ID
+        parent = item.parent()
+        if parent is None:
+            # Clicked on a top-level subnet
+            subnet_id = item.data(0, Qt.ItemDataRole.UserRole)
+        else:
+            # Clicked on a lease — get its parent subnet
+            subnet_id = parent.data(0, Qt.ItemDataRole.UserRole)
+
         new_lifetime_hours, ok = QInputDialog.getInt(self, "Change Lease Time", "Enter new lease time (hours):", 1, 1, 9999)
         if ok:
-            kea_api.update_subnet_lifetime(subnet_id, new_lifetime_hours * 3600)  # Convert to seconds
-            self.load_subnets()  # **Manually reload the subnets**
+            kea_api.update_subnet_lifetime(subnet_id, new_lifetime_hours * 3600)
+            self.load_subnets()
     
     def change_pool_range(self, item):
         subnet_text = item.parent().text(0)  # Get subnet text (e.g., "192.168.1.0/24 (ID: 1)")
