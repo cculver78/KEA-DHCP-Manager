@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel, QHeaderView  # type: ignore
 from PyQt6.QtGui import QColor  # type: ignore
 from PyQt6.QtCore import Qt  # type: ignore
+import ipaddress
 from config_loader import DUMMY_DATA, debug_print
 import kea_api
 
@@ -94,6 +95,21 @@ class StatusDialog(QDialog):
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
 
+        # Build map of subnet_id -> ip_network
+        subnet_map = {
+            str(s["subnet_id"]): ipaddress.ip_network(s["subnet"])
+            for s in subnets
+        }
+
+        # Build reservation counts by subnet_id
+        reservation_counts = {subnet_id: 0 for subnet_id in subnet_map}
+        for r in reservations:
+            ip = ipaddress.ip_address(r["ip-address"])
+            for sid, network in subnet_map.items():
+                if ip in network:
+                    reservation_counts[sid] += 1
+                    break
+
         for row, subnet in enumerate(subnets):
             subnet_id = str(subnet["subnet_id"])
             cidr = subnet["subnet"]
@@ -101,7 +117,6 @@ class StatusDialog(QDialog):
 
             # Parse pool start/end
             total_ips = 0
-            pool_start = pool_end = None
             for pool in pool_ranges:
                 start, end = pool.split("-")
                 start_int = int.from_bytes(map(int, start.split(".")), byteorder="big")
@@ -109,7 +124,8 @@ class StatusDialog(QDialog):
                 total_ips += end_int - start_int + 1
 
             lease_count = sum(1 for l in leases if str(l.get("subnet-id")) == subnet_id)
-            res_count = sum(1 for r in reservations if str(r.get("subnet_id", "")) == subnet_id)
+            res_count = reservation_counts.get(subnet_id, 0)
+
             used = lease_count + res_count
             free = max(0, total_ips - used)
             percent_free = (free / total_ips) * 100 if total_ips else 0
@@ -132,3 +148,4 @@ class StatusDialog(QDialog):
 
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+
